@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>XM Test-Project</title>
+		<!-- Font Awesome Icons -->
+		<link
+		rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+		<!-- Google Fonts -->
+		<link
+		href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap" rel="stylesheet"/>
+		<!-- Stylesheet -->
+		<link rel="stylesheet" href="{{ asset('css/style.css') }}"/> {% block stylesheets %}{% endblock %}{% block head_jscripts %}{% endblock %}
+		</head>
+		<body>
+			<header>
+				<nav>
+					<i class="fas fa-bars" id="ham-menu"></i>
+					<ul id="nav-bar">
+						<li>
+							<a href="{{ path('app_company') }}">Company Home</a>
+						</li>
+					</ul>
+				</nav>
+			</header>
+			<section id="home">
+				<div style="height: 60%; width: 100%; padding-right: 10%; padding-left: 10%; display: inline;" id="main">
+					<div id='jsmsg' style='display: none;'></div>
+					{% for message in app.flashes('success') %}
+						<div class='alert alert-success'>
+							{{ message }}
+						</div>
+					{% endfor %}
+					{% for message in app.flashes('failure') %}
+						<div class='alert alert-warning'>
+							{{ message }}
+						</div>
+					{% endfor %}
+					{% block div %}{% endblock %}
+				</div>
+
+			</section>
+			<script src={{ asset("js/script.js") }}></script>
+			{% block javascripts %}{% endblock %}
+		</body>
+	</html>
