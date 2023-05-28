@@ -22,73 +22,79 @@ class CompanyController extends AbstractController
         $company_form = $this->createForm(CompanyType::class, $company);
         $postdata = $req->request->all();
         // dd($postdata);
-        if (!empty($postdata['company'])) {
-            $postinfo = $postdata['company'];
-            $_symbol = $postinfo['symbol'];
-            $_to =  $postinfo['email'];
-            $_startdate = $postinfo['startdate'];
-            $_enddate = $postinfo['enddate'];
-
+        //
+        if ($req->isMethod('POST')) {
+            $status_code = 400;
             $rangedprices = [];
             $data_stats = [];
+            if (!empty($postdata['company'])) {
+                $postinfo = $postdata['company'];
 
-            //Validations
-            $valid = $this->validation($postinfo);
+                //Validations
+                $valid = $this->validation($postinfo);
+
+                if ($valid) {
+                    $_symbol = $postinfo['symbol'];
+                    $_to =  $postinfo['email'];
+                    $_startdate = $postinfo['startdate'];
+                    $_enddate = $postinfo['enddate'];
+                    $status_code = 200;
+                    $fetchcoldata = Company::fetchsymboldata('Company Name', $_symbol);
+                    $_compname = (isset($fetchcoldata[$_symbol])) ? $fetchcoldata[$_symbol] : '';
+
+                    //Send Email
+                    $mail_subject = $_compname;
+                    $mail_body = "$_startdate To $_enddate";
+                    $email = (new Email())
+                        ->from('xmproject@xmproj.com')
+                        ->to($_to)
+                        ->subject($mail_subject)
+                        ->text($mail_body);
+                    $mailer0->send($email);
+
+                    $this->addFlash('success', 'email has been sent successfully!');
 
 
-            if ($valid) {
+                    $hist_recs = $this->historical_data($_symbol);
+                    $prices = $hist_recs['prices'];
 
-                $fetchcoldata = Company::fetchsymboldata('Company Name', $_symbol);
-                $_compname = (isset($fetchcoldata[$_symbol])) ? $fetchcoldata[$_symbol] : '';
-
-                //Send Email
-                $mail_subject = $_compname;
-                $mail_body = "$_startdate To $_enddate";
-                $email = (new Email())
-                    ->from('xmproject@xmproj.com')
-                    ->to($_to)
-                    ->subject($mail_subject)
-                    ->text($mail_body);
-                $mailer0->send($email);
-
-                $this->addFlash('success', 'email has been sent successfully!');
-
-
-                $hist_recs = $this->historical_data($_symbol);
-                $prices = $hist_recs['prices'];
-
-                if (!empty($prices)) {
-                    for ($x = 0; $x < count($prices); $x++) {
-                        $timestamp = (int)$prices[$x]['date'];
-                        $date = new DateTime();
-                        $date->setTimestamp($timestamp);
-                        $setdate = $date->format('Y-m-d');
-                        if (($setdate >= $_startdate) && ($setdate <= $_enddate)) {
-                            $xm = count($rangedprices);
-                            $rangedprices[$xm]['open'] = (isset($prices[$x]['open'])) ? $prices[$x]['open'] : 0;
-                            $rangedprices[$xm]['close'] = (isset($prices[$x]['close'])) ? $prices[$x]['close'] : 0;
-                            $rangedprices[$xm]['high'] = (isset($prices[$x]['high'])) ? $prices[$x]['high'] : 0;
-                            $rangedprices[$xm]['low'] = (isset($prices[$x]['low'])) ? $prices[$x]['low'] : 0;
-                            $rangedprices[$xm]['volume'] = (isset($prices[$x]['volume'])) ? $prices[$x]['volume'] : 0;
-                            $rangedprices[$xm]['date'] = $setdate;
-                            $data_stats['labels'][] = "open ({$setdate})";
-                            $data_stats['labels'][] = "close ({$setdate})";
-                            $data_stats['values'][]  = ['open' => $rangedprices[$xm]['open'], 'close' => $rangedprices[$xm]['close']];
-                            $data_stats['backcolors'][]  = 'rgba(54, 162, 235, 0.2)';
-                            $data_stats['backcolors'][]  = 'rgba(255, 99, 132, 0.2)';
-                            $data_stats['bordcolors'][]  = 'rgb(54, 162, 235)';
-                            $data_stats['bordcolors'][]  = 'rgb(255, 99, 132)';
+                    if (!empty($prices)) {
+                        for ($x = 0; $x < count($prices); $x++) {
+                            $timestamp = (int)$prices[$x]['date'];
+                            $date = new DateTime();
+                            $date->setTimestamp($timestamp);
+                            $setdate = $date->format('Y-m-d');
+                            if (($setdate >= $_startdate) && ($setdate <= $_enddate)) {
+                                $xm = count($rangedprices);
+                                $rangedprices[$xm]['open'] = (isset($prices[$x]['open'])) ? $prices[$x]['open'] : 0;
+                                $rangedprices[$xm]['close'] = (isset($prices[$x]['close'])) ? $prices[$x]['close'] : 0;
+                                $rangedprices[$xm]['high'] = (isset($prices[$x]['high'])) ? $prices[$x]['high'] : 0;
+                                $rangedprices[$xm]['low'] = (isset($prices[$x]['low'])) ? $prices[$x]['low'] : 0;
+                                $rangedprices[$xm]['volume'] = (isset($prices[$x]['volume'])) ? $prices[$x]['volume'] : 0;
+                                $rangedprices[$xm]['date'] = $setdate;
+                                $data_stats['labels'][] = "open ({$setdate})";
+                                $data_stats['labels'][] = "close ({$setdate})";
+                                $data_stats['values'][]  = ['open' => $rangedprices[$xm]['open'], 'close' => $rangedprices[$xm]['close']];
+                                $data_stats['backcolors'][]  = 'rgba(54, 162, 235, 0.2)';
+                                $data_stats['backcolors'][]  = 'rgba(255, 99, 132, 0.2)';
+                                $data_stats['bordcolors'][]  = 'rgb(54, 162, 235)';
+                                $data_stats['bordcolors'][]  = 'rgb(255, 99, 132)';
+                            }
                         }
                     }
                 }
             }
 
             // dd($data_stats);
-            return $this->render('company/index.html.twig', [
-                'company_form' => $company_form->createView(),
-                'prices' => $rangedprices,
-                'stats' => $data_stats
-            ]);
+            return
+                new Response(
+                    $this->render('company/index.html.twig', [
+                        'company_form' => $company_form->createView(),
+                        'prices' => $rangedprices,
+                        'stats' => $data_stats
+                    ]),
+                    $status_code
+                );
         }
 
         return $this->render('company/index.html.twig', [
