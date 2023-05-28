@@ -43,9 +43,15 @@ This project is implemented and deployed on **localhost**, based on the requirem
 > ⚠️ _Please note: All mails sent or tried will not deliver to recipient, rather will be delivered to the inbox of mailtrap owner (me)_  
 > _To test this with an active mail service, please change the **MAILER_DSN** variable in the environment **.env** file to your preferred DSN configuration._
 
+### Routes
 The routes for this application are as following
 * Company Form Page\
 **[ GET | POST ] _{url}_**_/_
+
+### Test Case
+A Test case has been created using PHPunit Webtestcase, to test the page load using the routes, in the file _**./tests/CompanyPageTest.php**_, the functions are as follows:
+* **test_loadpage**: Tests the route **[ GET ] _{url}_**_/_
+* **test_mailsubmit**: Tests the route **[ POST ] _{url}_**_/_
 
 ---
 
