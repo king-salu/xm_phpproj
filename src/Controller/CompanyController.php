@@ -120,7 +120,7 @@ class CompanyController extends AbstractController
 
         // echo "url: $url";
         $output = curl_exec($ch);
-        echo curl_error($ch);
+        //echo curl_error($ch);
         $result = json_decode($output, true);
         // dd($result);
 

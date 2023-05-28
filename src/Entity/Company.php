@@ -118,6 +118,6 @@ class Company
         //echo curl_error($ch);
         $result = json_decode($output, true);
         //dd($result[0]);
-        return $result;
+        return (empty($result) ? [] : $result);
     }
 }
